@@ -9,6 +9,7 @@ import CTASection from './components/CTASection';
 import Footer from './components/Footer';
 import Tutorial from './pages/Tutorial';
 import LogSign from './pages/LogSign';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
         />
         <Route path="/tutorial" element={<Tutorial />} />
         <Route path="/logsign" element={<LogSign />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
   );

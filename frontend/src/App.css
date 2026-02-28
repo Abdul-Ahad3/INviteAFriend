@@ -24,10 +24,13 @@
 .btn.primary {
   background-color: #ffffff;
   color: #007bff;
+  border: 2px solid #0066cc;
 }
 
 .btn.secondary {
-  background-color: #6c757d;
+  background-color: #007bff;
+  color:#ffffff;
+  border: 2px solid #ffffff;
 }
 
 .btn.large {

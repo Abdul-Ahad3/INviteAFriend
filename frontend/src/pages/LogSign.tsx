@@ -1,6 +1,7 @@
 import React from 'react';
 import Footer from '../components/Footer';
 import '../App.css';
+import { Link } from 'react-router-dom';
 
 const LogSign: React.FC = () => {
   return (
@@ -13,7 +14,7 @@ const LogSign: React.FC = () => {
         <label htmlFor="password">Password:</label>
         <input type="password" placeholder="Password" />
 
-        <button>Login</button>
+        <Link to="/dashboard" className='btn secondary'>Log in</Link>
       </div>
       <div className='section signup'>
         <h1>Signup</h1>
@@ -35,7 +36,7 @@ const LogSign: React.FC = () => {
         <label htmlFor="password">Password:</label>
         <input type="password" placeholder="Password" />
 
-        <button>Signup</button>
+        <Link to="/dashboard" className='btn primary'>Sign up</Link>
       </div>
     </div>
   );
