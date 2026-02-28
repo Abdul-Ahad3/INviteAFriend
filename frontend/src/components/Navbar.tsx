@@ -1,17 +1,20 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import '../App.css';
 
 const Navbar: React.FC = () => {
   return (
     <nav className="navbar">
-      <div className="navbar-logo">InviteAFriend</div>
+      <Link to="/" className="navbar-logo">
+        <div className="navbar-logo">InviteAFriend</div>
+      </Link>
       <div className="navbar-links">
-        <a href="#apply" className="btn">
-          Apply To Visit
-        </a>
-        <a href="#list" className="btn btn-outline">
-          List Your Home
-        </a>
+        <Link to="/logsign" className="btn btn-outline">
+          Login/Signup
+        </Link>
+        <Link to="/tutorial" className="btn btn-outline">
+          Get Started
+        </Link>
       </div>
     </nav>
   );
