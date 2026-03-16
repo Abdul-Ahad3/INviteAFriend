@@ -45,7 +45,7 @@
 }
 
 /* navbar */
-.navbar {
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -56,12 +56,12 @@
   z-index: 1000;
 }
 
-.navbar-logo {
+.header-logo {
   font-size: 1.5rem;
   font-weight: bold;
 }
 
-.navbar-links a {
+.header-links a {
   margin-left: 1rem;
 }
 
