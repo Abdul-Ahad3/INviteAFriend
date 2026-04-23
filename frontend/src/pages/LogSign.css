@@ -1,0 +1,236 @@
+/* LogSign Page Styling */
+
+.logsign-container {
+  min-height: 85vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #f1f1f1 100%);
+}
+
+.logsign-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 102, 204, 0.1);
+  width: 100%;
+  max-width: 500px;
+  overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tab Navigation */
+.logsign-tabs {
+  display: flex;
+  border-bottom: 2px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 1.25rem 1rem;
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #999;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.tab-btn:hover {
+  color: #0066cc;
+}
+
+.tab-btn.active {
+  color: #0066cc;
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(135deg, #0066cc 0%, #007bff 100%);
+}
+
+/* Form Section */
+.form-section {
+  padding: 2.5rem;
+}
+
+.form-section h2 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.form-subtitle {
+  color: #999;
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+/* Form Styling */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.form-input {
+  padding: 0.85rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #0066cc;
+  background-color: #f8f9ff;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.form-input::placeholder {
+  color: #bbb;
+}
+
+/* Form Options (Checkbox & Links) */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.remember-me,
+.terms-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+  cursor: pointer;
+  user-select: none;
+}
+
+.remember-me input,
+.terms-checkbox input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #0066cc;
+}
+
+.forgot-pwd {
+  font-size: 0.9rem;
+  color: #0066cc;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.forgot-pwd:hover {
+  color: #004ba8;
+  text-decoration: underline;
+}
+
+.terms-checkbox {
+  margin: 1rem 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* Buttons */
+.btn-login,
+.btn-signup {
+  padding: 0.95rem 1.5rem !important;
+  margin: 1.5rem 0 0 0 !important;
+  background: linear-gradient(135deg, #0066cc 0%, #007bff 100%);
+  color: #ffffff !important;
+  border: none !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 102, 204, 0.2);
+}
+
+.btn-login:hover,
+.btn-signup:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 102, 204, 0.3);
+  background: linear-gradient(135deg, #004ba8 0%, #0066cc 100%);
+}
+
+.btn-login:active,
+.btn-signup:active {
+  transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .logsign-card {
+    max-width: 100%;
+  }
+
+  .form-section {
+    padding: 1.5rem;
+  }
+
+  .form-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .tab-btn {
+    padding: 1rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
