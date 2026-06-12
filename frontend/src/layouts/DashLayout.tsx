@@ -6,7 +6,14 @@ import { Outlet } from 'react-router-dom';
 function DashLayout() {
   return (
     <div className="pub-layout">
-      <Header title={'Dashboard'} buttons={['Switch Profiles', 'My Profile', 'Logout']} />
+      <Header
+        title="Dashboard"
+        links={[
+          { label: 'Switch Profiles', to: '/dashboard' },
+          { label: 'My Profile', to: '/dashboard' },
+          { label: 'Logout', to: '/' },
+        ]}
+      />
       <Outlet />
       <Footer />
     </div>

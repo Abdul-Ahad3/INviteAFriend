@@ -14,7 +14,13 @@ import Dashboard from './pages/Dashboard';
 function App() {
   return (
     <BrowserRouter>
-      <Header title={'InviteAFriend'} buttons={['Getting Started', 'Login/Signup']} />
+      <Header
+        title="InviteAFriend"
+        links={[
+          { label: 'Get Started', to: '/tutorial' },
+          { label: 'Login/Signup', to: '/logsign' },
+        ]}
+      />
       <Routes>
         <Route
           path="/"

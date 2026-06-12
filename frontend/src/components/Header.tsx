@@ -1,31 +1,29 @@
 import { Link } from 'react-router-dom';
 import '../App.css';
 
-type HeaderProps = {
-  title: string;
-  buttons: string[];
+type HeaderLink = {
+  label: string;
+  to: string;
 };
 
-const Header = ({ title, buttons }: HeaderProps) => {
+type HeaderProps = {
+  title: string;
+  links: HeaderLink[];
+};
+
+const Header = ({ title, links }: HeaderProps) => {
   return (
     <header className="header">
       <Link to="/" className="header-logo">
-        <div className="header-logo">{title}</div>
+        {title}
       </Link>
-      <div className="header-links">
-        {buttons.map((button, index) => (
-          <button key={index} className="btn btn-outline">
-            {button}
-          </button>
+      <nav className="header-links" aria-label="Primary navigation">
+        {links.map((link) => (
+          <Link key={link.to} to={link.to} className="btn btn-outline">
+            {link.label}
+          </Link>
         ))}
-
-        <Link to="/logsign" className="btn btn-outline">
-          Login/Signup
-        </Link>
-        <Link to="/tutorial" className="btn btn-outline">
-          Get Started
-        </Link>
-      </div>
+      </nav>
     </header>
   );
 };
