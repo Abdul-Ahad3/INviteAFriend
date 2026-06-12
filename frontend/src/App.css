@@ -277,7 +277,11 @@
   background: transparent;
 }
 
-.dashboard-calendar,
+.dashboard-calendar {
+  width: min(100%, 1680px);
+  margin: 0 auto;
+}
+
 .dashboard-sections {
   max-width: 1120px;
   margin: 0 auto;
@@ -394,20 +398,82 @@
 
 .calendar-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   gap: 1rem;
-  align-items: baseline;
-  margin-bottom: 1rem;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  position: relative;
 }
 
-.calendar-header h2 {
-  margin: 0;
-  font-size: 1.3rem;
-}
-
-.calendar-header span {
-  color: #4b5563;
+.calendar-nav-button,
+.calendar-picker-column button {
+  border: 2px solid #111827;
+  background: #ffffff;
+  color: #1f2937;
   font-weight: 700;
+}
+
+.calendar-nav-button {
+  min-width: 48px;
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  padding: 0;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.calendar-month-picker {
+  position: relative;
+  min-width: min(100%, 320px);
+  text-align: center;
+}
+
+.calendar-month-button {
+  width: 100%;
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  background: transparent;
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.calendar-picker-panel {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 0.5rem);
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1fr 0.7fr;
+  gap: 0.75rem;
+  width: min(420px, 88vw);
+  max-height: 260px;
+  padding: 0.75rem;
+  border: 3px solid #111827;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.18);
+  transform: translateX(-50%);
+}
+
+.calendar-picker-column {
+  display: grid;
+  gap: 0.4rem;
+  max-height: 230px;
+  overflow-y: auto;
+}
+
+.calendar-picker-column button {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+}
+
+.calendar-picker-column button.active {
+  background: #007bff;
+  color: #ffffff;
 }
 
 .calendar-grid {
@@ -487,9 +553,16 @@
 .dark-theme .request-form input,
 .dark-theme .request-form textarea,
 .dark-theme .request-card,
-.dark-theme .calendar {
+.dark-theme .calendar,
+.dark-theme .calendar-nav-button,
+.dark-theme .calendar-picker-column button,
+.dark-theme .calendar-picker-panel {
   background: #111827;
   border-color: #374151;
+  color: #f9fafb;
+}
+
+.dark-theme .calendar-month-button {
   color: #f9fafb;
 }
 
@@ -503,6 +576,11 @@
 }
 
 .dark-theme .calendar-day.current {
+  background: #60a5fa;
+  color: #111827;
+}
+
+.dark-theme .calendar-picker-column button.active {
   background: #60a5fa;
   color: #111827;
 }
@@ -692,6 +770,15 @@
   .dashboard-sections,
   .profile-grid {
     grid-template-columns: 1fr;
+  }
+
+  .calendar-header {
+    flex-wrap: wrap;
+  }
+
+  .calendar-month-picker {
+    order: -1;
+    flex-basis: 100%;
   }
 
   .calendar-day {

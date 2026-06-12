@@ -23,6 +23,11 @@ const monthNames = [
 
 const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+const selectableYears = Array.from(
+  { length: 11 },
+  (_, index) => new Date().getFullYear() - 5 + index,
+);
+
 const buildCalendarDays = (date: Date) => {
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -38,14 +43,43 @@ const buildCalendarDays = (date: Date) => {
 const Dashboard: React.FC<DashboardProps> = ({ mode }) => {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [planMessage, setPlanMessage] = useState('');
+  const [displayDate, setDisplayDate] = useState(() => new Date());
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
   const today = useMemo(() => new Date(), []);
-  const calendarDays = useMemo(() => buildCalendarDays(today), [today]);
-  const currentDate = today.getDate();
+  const calendarDays = useMemo(
+    () => buildCalendarDays(displayDate),
+    [displayDate],
+  );
+  const displayMonth = displayDate.getMonth();
+  const displayYear = displayDate.getFullYear();
+  const isCurrentMonth =
+    displayMonth === today.getMonth() && displayYear === today.getFullYear();
   const calendarTitle =
     mode === 'visitor' ? 'Visiting Calendar' : 'Hosting Calendar';
   const selectedDateLabel = selectedDay
-    ? `${monthNames[today.getMonth()]} ${selectedDay}, ${today.getFullYear()}`
+    ? `${monthNames[displayMonth]} ${selectedDay}, ${displayYear}`
     : '';
+
+  const moveMonth = (offset: number) => {
+    setDisplayDate(
+      (currentDate) =>
+        new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1),
+    );
+    setSelectedDay(null);
+    setPlanMessage('');
+  };
+
+  const selectMonth = (month: number) => {
+    setDisplayDate((currentDate) => new Date(currentDate.getFullYear(), month, 1));
+    setSelectedDay(null);
+    setPlanMessage('');
+  };
+
+  const selectYear = (year: number) => {
+    setDisplayDate((currentDate) => new Date(year, currentDate.getMonth(), 1));
+    setSelectedDay(null);
+    setPlanMessage('');
+  };
 
   const selectCalendarDay = (day: number) => {
     setSelectedDay(day);
@@ -62,14 +96,63 @@ const Dashboard: React.FC<DashboardProps> = ({ mode }) => {
 
   return (
     <div className="page dashboard">
-      <h1>Dashboard</h1>
+      <h1>{calendarTitle}</h1>
 
       <section className="calendar dashboard-calendar" aria-label={calendarTitle}>
         <div className="calendar-header">
-          <h2>{calendarTitle}</h2>
-          <span>
-            {monthNames[today.getMonth()]} {today.getFullYear()}
-          </span>
+          <button
+            type="button"
+            className="calendar-nav-button"
+            onClick={() => moveMonth(-1)}
+            aria-label="Previous month"
+          >
+            ‹
+          </button>
+          <div className="calendar-month-picker">
+            <button
+              type="button"
+              className="calendar-month-button"
+              onClick={() => setIsPickerOpen((isOpen) => !isOpen)}
+            >
+              {monthNames[displayMonth]} {displayYear}
+            </button>
+            {isPickerOpen && (
+              <div className="calendar-picker-panel">
+                <div className="calendar-picker-column" aria-label="Select month">
+                  {monthNames.map((month, index) => (
+                    <button
+                      type="button"
+                      key={month}
+                      className={index === displayMonth ? 'active' : ''}
+                      onClick={() => selectMonth(index)}
+                    >
+                      {month}
+                    </button>
+                  ))}
+                </div>
+                <div className="calendar-picker-column" aria-label="Select year">
+                  {selectableYears.map((year) => (
+                    <button
+                      type="button"
+                      key={year}
+                      className={year === displayYear ? 'active' : ''}
+                      onClick={() => selectYear(year)}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            className="calendar-nav-button"
+            onClick={() => moveMonth(1)}
+            aria-label="Next month"
+          >
+            ›
+          </button>
         </div>
         <div className="calendar-grid calendar-weekdays">
           {weekDays.map((day) => (
@@ -84,7 +167,7 @@ const Dashboard: React.FC<DashboardProps> = ({ mode }) => {
                 key={`${day}-${index}`}
                 className={[
                   'calendar-day',
-                  day === currentDate ? 'current' : '',
+                  isCurrentMonth && day === today.getDate() ? 'current' : '',
                   day === selectedDay ? 'selected' : '',
                 ]
                   .filter(Boolean)
