@@ -12,6 +12,8 @@ import Tutorial from './pages/Tutorial';
 import LogSign from './pages/LogSign';
 import Dashboard from './pages/Dashboard';
 import Me from './pages/Me';
+import PlanVisit from './pages/PlanVisit';
+import Visits from './pages/Visits';
 
 type DashboardMode = 'visitor' | 'host';
 type Theme = 'light' | 'dark';
@@ -20,7 +22,9 @@ function AppContent() {
   const location = useLocation();
   const isDashboardArea =
     location.pathname.startsWith('/dashboard') ||
-    location.pathname.startsWith('/me');
+    location.pathname.startsWith('/me') ||
+    location.pathname.startsWith('/plan-visit') ||
+    location.pathname.startsWith('/visits');
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('visitor');
   const [theme, setTheme] = useState<Theme>('light');
 
@@ -84,6 +88,8 @@ function AppContent() {
           element={<Dashboard mode={dashboardMode} />}
         />
         <Route path="/me" element={<Me />} />
+        <Route path="/plan-visit" element={<PlanVisit />} />
+        <Route path="/visits" element={<Visits />} />
       </Routes>
     </div>
   );

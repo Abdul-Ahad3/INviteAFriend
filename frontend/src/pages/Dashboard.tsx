@@ -1,9 +1,17 @@
 import React, { useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 type DashboardMode = 'visitor' | 'host';
 
 type DashboardProps = {
   mode: DashboardMode;
+};
+
+type VisitRequest = {
+  id: number;
+  visitDate: string;
+  lengthOfStay: string;
+  purpose: string;
 };
 
 const monthNames = [
@@ -40,7 +48,52 @@ const buildCalendarDays = (date: Date) => {
   ];
 };
 
+const getStoredVisitRequests = (): VisitRequest[] => {
+  try {
+    return JSON.parse(localStorage.getItem('visitRequests') || '[]');
+  } catch {
+    return [];
+  }
+};
+
+const formatDateValue = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+    2,
+    '0',
+  )}-${String(date.getDate()).padStart(2, '0')}`;
+
+const getVisitDayCount = (request: VisitRequest) =>
+  Math.max(Number.parseInt(request.lengthOfStay, 10) || 1, 1);
+
+const getVisitEndDate = (request: VisitRequest) => {
+  const startDate = new Date(`${request.visitDate}T00:00:00`);
+
+  if (Number.isNaN(startDate.getTime())) {
+    return null;
+  }
+
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + getVisitDayCount(request) - 1);
+  return endDate;
+};
+
+const formatReadableDate = (dateValue: string) => {
+  const date = new Date(`${dateValue}T00:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return dateValue;
+  }
+
+  return new Intl.DateTimeFormat('en', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(date);
+};
+
 const Dashboard: React.FC<DashboardProps> = ({ mode }) => {
+  const navigate = useNavigate();
+  const [visitRequests] = useState<VisitRequest[]>(getStoredVisitRequests);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [planMessage, setPlanMessage] = useState('');
   const [displayDate, setDisplayDate] = useState(() => new Date());
@@ -59,6 +112,48 @@ const Dashboard: React.FC<DashboardProps> = ({ mode }) => {
   const selectedDateLabel = selectedDay
     ? `${monthNames[displayMonth]} ${selectedDay}, ${displayYear}`
     : '';
+  const selectedDateValue = selectedDay
+    ? `${displayYear}-${String(displayMonth + 1).padStart(2, '0')}-${String(
+        selectedDay,
+      ).padStart(2, '0')}`
+    : '';
+  const plannedVisits = useMemo(() => {
+    const visitsByDate = new Map<string, VisitRequest>();
+
+    visitRequests.forEach((request) => {
+      if (!request.visitDate || !request.purpose) {
+        return;
+      }
+
+      const days = Math.max(Number.parseInt(request.lengthOfStay, 10) || 1, 1);
+      const startDate = new Date(`${request.visitDate}T00:00:00`);
+
+      if (Number.isNaN(startDate.getTime())) {
+        return;
+      }
+
+      Array.from({ length: days }).forEach((_, dayOffset) => {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + dayOffset);
+        visitsByDate.set(formatDateValue(date), request);
+      });
+    });
+
+    return visitsByDate;
+  }, [visitRequests]);
+  const currentPlannedVisits = useMemo(
+    () =>
+      visitRequests.filter((request) => {
+        const endDate = getVisitEndDate(request);
+
+        if (!endDate) {
+          return false;
+        }
+
+        return endDate >= today;
+      }),
+    [today, visitRequests],
+  );
 
   const moveMonth = (offset: number) => {
     setDisplayDate(
@@ -87,11 +182,41 @@ const Dashboard: React.FC<DashboardProps> = ({ mode }) => {
   };
 
   const beginVisitPlan = () => {
-    if (!selectedDateLabel) {
+    if (!selectedDateValue) {
       return;
     }
 
     setPlanMessage(`Ready to plan a visit for ${selectedDateLabel}.`);
+    navigate(`/plan-visit?date=${selectedDateValue}`);
+  };
+
+  const renderCalendarDay = (day: number, index: number) => {
+    const dateValue = `${displayYear}-${String(displayMonth + 1).padStart(
+      2,
+      '0',
+    )}-${String(day).padStart(2, '0')}`;
+    const plannedVisit = plannedVisits.get(dateValue);
+
+    return (
+      <button
+        type="button"
+        key={`${day}-${index}`}
+        className={[
+          'calendar-day',
+          isCurrentMonth && day === today.getDate() ? 'current' : '',
+          day === selectedDay ? 'selected' : '',
+          plannedVisit ? 'planned' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        onClick={() => selectCalendarDay(day)}
+      >
+        <span className="calendar-day-number">{day}</span>
+        {plannedVisit && (
+          <span className="calendar-day-purpose">{plannedVisit.purpose}</span>
+        )}
+      </button>
+    );
   };
 
   return (
@@ -162,20 +287,7 @@ const Dashboard: React.FC<DashboardProps> = ({ mode }) => {
         <div className="calendar-grid">
           {calendarDays.map((day, index) =>
             day ? (
-              <button
-                type="button"
-                key={`${day}-${index}`}
-                className={[
-                  'calendar-day',
-                  isCurrentMonth && day === today.getDate() ? 'current' : '',
-                  day === selectedDay ? 'selected' : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-                onClick={() => selectCalendarDay(day)}
-              >
-                {day}
-              </button>
+              renderCalendarDay(day, index)
             ) : (
               <span
                 key={`blank-${index}`}
@@ -219,8 +331,36 @@ const Dashboard: React.FC<DashboardProps> = ({ mode }) => {
               <p>Updates about meetups, community visits, and host availability.</p>
             </section>
             <section className="dashboard-panel dashboard-section">
-              <h2>Previous Visits</h2>
-              <p>Your completed stays and past host connections will appear here.</p>
+              <h2>Visits</h2>
+              <div className="visits-grid">
+                <div className="visit-subsection">
+                  <h3>Planned Visits</h3>
+                  {currentPlannedVisits.length > 0 ? (
+                    <div className="visit-list">
+                      {currentPlannedVisits.map((visit) => (
+                        <Link
+                          key={visit.id}
+                          to="/visits"
+                          className="visit-card"
+                        >
+                          <h4>{visit.purpose}</h4>
+                          <p>
+                            {formatReadableDate(visit.visitDate)} -{' '}
+                            {getVisitDayCount(visit)} day
+                            {getVisitDayCount(visit) === 1 ? '' : 's'}
+                          </p>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <p>Your planned visits will appear here.</p>
+                  )}
+                </div>
+                <div className="visit-subsection">
+                  <h3>Previous Visits</h3>
+                  <p>Your completed stays and past host connections will appear here.</p>
+                </div>
+              </div>
             </section>
             <section className="dashboard-panel dashboard-section">
               <h2>Famous Resorts</h2>
