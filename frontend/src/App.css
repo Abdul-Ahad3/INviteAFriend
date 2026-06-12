@@ -317,6 +317,132 @@
   border-color: #60a5fa;
 }
 
+.profile-page {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.profile-header {
+  max-width: 760px;
+  margin: 0 auto 2rem;
+}
+
+.profile-header p {
+  margin: 0;
+  color: #4b5563;
+}
+
+.profile-form {
+  display: grid;
+  gap: 1.5rem;
+  text-align: left;
+}
+
+.profile-section {
+  padding: 1.5rem;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.profile-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.profile-section-heading h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.profile-chip {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #0066cc;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.profile-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  color: #374151;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.profile-grid input,
+.profile-grid select,
+.profile-grid textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2937;
+  font: inherit;
+}
+
+.profile-grid textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.profile-wide-field {
+  grid-column: 1 / -1;
+}
+
+.profile-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.profile-save-message {
+  color: #047857;
+  font-weight: 700;
+}
+
+.dark-theme .profile-header p,
+.dark-theme .profile-grid label {
+  color: #d1d5db;
+}
+
+.dark-theme .profile-section {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.dark-theme .profile-chip {
+  background: #111827;
+  color: #93c5fd;
+}
+
+.dark-theme .profile-grid input,
+.dark-theme .profile-grid select,
+.dark-theme .profile-grid textarea {
+  background: #111827;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+.dark-theme .profile-save-message {
+  color: #6ee7b7;
+}
+
 @media (max-width: 700px) {
   .header {
     align-items: stretch;
@@ -356,5 +482,15 @@
   .section {
     width: 100%;
     margin: 0.75rem 0;
+  }
+
+  .profile-section-heading,
+  .profile-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr;
   }
 }

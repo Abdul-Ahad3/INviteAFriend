@@ -11,13 +11,16 @@ import Footer from './components/Footer';
 import Tutorial from './pages/Tutorial';
 import LogSign from './pages/LogSign';
 import Dashboard from './pages/Dashboard';
+import Me from './pages/Me';
 
 type DashboardMode = 'visitor' | 'host';
 type Theme = 'light' | 'dark';
 
 function AppContent() {
   const location = useLocation();
-  const isDashboard = location.pathname.startsWith('/dashboard');
+  const isDashboardArea =
+    location.pathname.startsWith('/dashboard') ||
+    location.pathname.startsWith('/me');
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('visitor');
   const [theme, setTheme] = useState<Theme>('light');
 
@@ -34,17 +37,17 @@ function AppContent() {
   return (
     <div className={`app-shell ${theme}-theme`}>
       <Header
-        title={isDashboard ? 'Dashboard' : 'InviteAFriend'}
+        title={isDashboardArea ? 'Dashboard' : 'InviteAFriend'}
         links={
-          isDashboard
-            ? [{ label: 'Profile', to: '/dashboard' }]
+          isDashboardArea
+            ? [{ label: 'Profile', to: '/me' }]
             : [
                 { label: 'Get Started', to: '/tutorial' },
                 { label: 'Login/Signup', to: '/logsign' },
               ]
         }
         actions={
-          isDashboard
+          isDashboardArea
             ? [
                 {
                   label:
@@ -79,6 +82,7 @@ function AppContent() {
           path="/dashboard"
           element={<Dashboard mode={dashboardMode} />}
         />
+        <Route path="/me" element={<Me />} />
       </Routes>
     </div>
   );
