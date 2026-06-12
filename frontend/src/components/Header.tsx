@@ -14,6 +14,7 @@ type HeaderAction = {
 
 type HeaderProps = {
   title: string;
+  homeTo?: string;
   links?: HeaderLink[];
   actions?: HeaderAction[];
   theme: 'light' | 'dark';
@@ -22,6 +23,7 @@ type HeaderProps = {
 
 const Header = ({
   title,
+  homeTo = '/',
   links = [],
   actions = [],
   theme,
@@ -29,7 +31,7 @@ const Header = ({
 }: HeaderProps) => {
   return (
     <header className="header">
-      <Link to="/" className="header-logo">
+      <Link to={homeTo} className="header-logo">
         {title}
       </Link>
       <nav className="header-links" aria-label="Primary navigation">

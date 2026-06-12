@@ -38,6 +38,7 @@ function AppContent() {
     <div className={`app-shell ${theme}-theme`}>
       <Header
         title={isDashboardArea ? 'Dashboard' : 'InviteAFriend'}
+        homeTo={isDashboardArea ? '/dashboard' : '/'}
         links={
           isDashboardArea
             ? [{ label: 'Profile', to: '/me' }]
