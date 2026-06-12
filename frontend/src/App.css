@@ -8,6 +8,20 @@
   color: #333;
 }
 
+.app-shell {
+  min-height: 100vh;
+  background: #ffffff;
+  color: #1f2937;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.dark-theme {
+  background: #111827;
+  color: #f9fafb;
+}
+
 /* basic button styles */
 .btn {
   display: inline-flex;
@@ -46,6 +60,11 @@
   border: 2px solid #007bff;
 }
 
+.btn.btn-outline.active {
+  background: #007bff;
+  color: #ffffff;
+}
+
 /* navbar */
 .header {
   display: flex;
@@ -57,6 +76,9 @@
   position: sticky;
   top: 0;
   z-index: 1000;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .header-logo {
@@ -72,6 +94,25 @@
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.dark-theme .header {
+  background: #1f2937;
+  border-bottom: 1px solid #374151;
+}
+
+.dark-theme .header-logo {
+  color: #f9fafb;
+}
+
+.dark-theme .btn.btn-outline {
+  color: #93c5fd;
+  border-color: #60a5fa;
+}
+
+.dark-theme .btn.btn-outline.active {
+  background: #60a5fa;
+  color: #111827;
 }
 
 /* hero section */
@@ -110,6 +151,12 @@
   background: #fff;
 }
 
+.dark-theme .stats,
+.dark-theme .feature-card,
+.dark-theme .footer {
+  background: #1f2937;
+}
+
 .stat-item {
   margin: 1rem 2rem;
   text-align: center;
@@ -125,6 +172,11 @@
   color: #555;
 }
 
+.dark-theme .stat-label,
+.dark-theme .footer {
+  color: #d1d5db;
+}
+
 /* features section */
 .features {
   display: grid;
@@ -132,6 +184,10 @@
   gap: 1.5rem;
   padding: 3rem 2rem;
   background: #f1f1f1;
+}
+
+.dark-theme .features {
+  background: #111827;
 }
 
 .feature-card {
@@ -149,6 +205,11 @@
 
 .feature-card h3 {
   margin-top: 0;
+}
+
+.dark-theme .feature-card {
+  color: #f9fafb;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 
 /* cta section */
@@ -176,7 +237,6 @@
 .page {
   padding: 4rem 2rem;
   text-align: center;
-  color: #1f2937;
   min-height: 70vh;
 }
 .page h1 {
@@ -211,6 +271,50 @@
   background-color: #f1f1f1;
   color: #333;
   border: 0px solid transparent;
+}
+
+.dashboard {
+  background: transparent;
+}
+
+.dashboard-panel {
+  max-width: 720px;
+  margin: 0 auto 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  background: #eff6ff;
+  text-align: left;
+}
+
+.dashboard-panel h2 {
+  margin: 0 0 0.5rem;
+}
+
+.dashboard-panel p {
+  margin: 0;
+  color: #4b5563;
+}
+
+.calendar {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  border: 1px dashed #93c5fd;
+  border-radius: 8px;
+}
+
+.dark-theme .dashboard-panel {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.dark-theme .dashboard-panel p {
+  color: #d1d5db;
+}
+
+.dark-theme .calendar {
+  border-color: #60a5fa;
 }
 
 @media (max-width: 700px) {

@@ -12,6 +12,8 @@ function PubLayout() {
           { label: 'Get Started', to: '/tutorial' },
           { label: 'Login/Signup', to: '/logsign' },
         ]}
+        theme="light"
+        onToggleTheme={() => undefined}
       />
       <Outlet />
       <Footer />

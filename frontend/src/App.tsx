@@ -1,5 +1,6 @@
 import './App.css';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { useState } from 'react';
 
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -11,15 +12,53 @@ import Tutorial from './pages/Tutorial';
 import LogSign from './pages/LogSign';
 import Dashboard from './pages/Dashboard';
 
-function App() {
+type DashboardMode = 'visitor' | 'host';
+type Theme = 'light' | 'dark';
+
+function AppContent() {
+  const location = useLocation();
+  const isDashboard = location.pathname.startsWith('/dashboard');
+  const [dashboardMode, setDashboardMode] = useState<DashboardMode>('visitor');
+  const [theme, setTheme] = useState<Theme>('light');
+
+  const toggleDashboardMode = () => {
+    setDashboardMode((currentMode) =>
+      currentMode === 'visitor' ? 'host' : 'visitor',
+    );
+  };
+
+  const toggleTheme = () => {
+    setTheme((currentTheme) => (currentTheme === 'light' ? 'dark' : 'light'));
+  };
+
   return (
-    <BrowserRouter>
+    <div className={`app-shell ${theme}-theme`}>
       <Header
-        title="InviteAFriend"
-        links={[
-          { label: 'Get Started', to: '/tutorial' },
-          { label: 'Login/Signup', to: '/logsign' },
-        ]}
+        title={isDashboard ? 'Dashboard' : 'InviteAFriend'}
+        links={
+          isDashboard
+            ? [{ label: 'Profile', to: '/dashboard' }]
+            : [
+                { label: 'Get Started', to: '/tutorial' },
+                { label: 'Login/Signup', to: '/logsign' },
+              ]
+        }
+        actions={
+          isDashboard
+            ? [
+                {
+                  label:
+                    dashboardMode === 'visitor'
+                      ? 'Visitor Mode'
+                      : 'Host Mode',
+                  onClick: toggleDashboardMode,
+                  active: true,
+                },
+              ]
+            : []
+        }
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
       <Routes>
         <Route
@@ -36,8 +75,19 @@ function App() {
         />
         <Route path="/tutorial" element={<Tutorial />} />
         <Route path="/logsign" element={<LogSign />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route
+          path="/dashboard"
+          element={<Dashboard mode={dashboardMode} />}
+        />
       </Routes>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }

@@ -9,10 +9,11 @@ function DashLayout() {
       <Header
         title="Dashboard"
         links={[
-          { label: 'Switch Profiles', to: '/dashboard' },
-          { label: 'My Profile', to: '/dashboard' },
-          { label: 'Logout', to: '/' },
+          { label: 'Profile', to: '/dashboard' },
         ]}
+        actions={[{ label: 'Visitor Mode', onClick: () => undefined, active: true }]}
+        theme="light"
+        onToggleTheme={() => undefined}
       />
       <Outlet />
       <Footer />

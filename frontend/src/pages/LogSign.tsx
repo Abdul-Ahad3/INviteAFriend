@@ -1,11 +1,63 @@
 import React, { useState } from 'react';
 import Footer from '../components/Footer';
 import '../App.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './LogSign.css';
 
 const LogSign: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoginError('');
+    setIsLoggingIn(true);
+
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const responseText = await response.text();
+      let data: { message?: string; token?: string; user?: unknown } = {};
+
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          throw new Error('Login server returned an invalid response.');
+        }
+      }
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Unable to sign in.');
+      }
+
+      if (!data.token || !data.user) {
+        throw new Error('Login server returned an incomplete response.');
+      }
+
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('authUser', JSON.stringify(data.user));
+      navigate('/dashboard');
+    } catch (error) {
+      setLoginError(
+        error instanceof Error
+          ? error.message
+          : 'Unable to sign in. Please try again.',
+      );
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
   return (
     <>
@@ -33,14 +85,18 @@ const LogSign: React.FC = () => {
               <h2>Welcome Back</h2>
               <p className="form-subtitle">Sign in to your account</p>
               
-              <form className="auth-form">
+              <form className="auth-form" onSubmit={handleLogin}>
                 <div className="form-group">
-                  <label htmlFor="login-username">Username or Email</label>
+                  <label htmlFor="login-email">Email</label>
                   <input
-                    type="text"
-                    id="login-username"
-                    placeholder="Enter your username or email"
+                    type="email"
+                    id="login-email"
+                    placeholder="Enter your email"
                     className="form-input"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    autoComplete="email"
+                    required
                   />
                 </div>
 
@@ -51,6 +107,10 @@ const LogSign: React.FC = () => {
                     id="login-password"
                     placeholder="Enter your password"
                     className="form-input"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    autoComplete="current-password"
+                    required
                   />
                 </div>
 
@@ -62,9 +122,15 @@ const LogSign: React.FC = () => {
                   <a href="#" className="forgot-pwd">Forgot password?</a>
                 </div>
 
-                <Link to="/dashboard" className="btn btn-login">
-                  Sign In
-                </Link>
+                {loginError && <p className="form-error">{loginError}</p>}
+
+                <button
+                  type="submit"
+                  className="btn btn-login"
+                  disabled={isLoggingIn}
+                >
+                  {isLoggingIn ? 'Signing In...' : 'Sign In'}
+                </button>
               </form>
             </div>
           )}

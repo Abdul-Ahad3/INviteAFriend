@@ -6,12 +6,27 @@ type HeaderLink = {
   to: string;
 };
 
-type HeaderProps = {
-  title: string;
-  links: HeaderLink[];
+type HeaderAction = {
+  label: string;
+  onClick: () => void;
+  active?: boolean;
 };
 
-const Header = ({ title, links }: HeaderProps) => {
+type HeaderProps = {
+  title: string;
+  links?: HeaderLink[];
+  actions?: HeaderAction[];
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
+};
+
+const Header = ({
+  title,
+  links = [],
+  actions = [],
+  theme,
+  onToggleTheme,
+}: HeaderProps) => {
   return (
     <header className="header">
       <Link to="/" className="header-logo">
@@ -23,6 +38,19 @@ const Header = ({ title, links }: HeaderProps) => {
             {link.label}
           </Link>
         ))}
+        {actions.map((action) => (
+          <button
+            key={action.label}
+            type="button"
+            className={`btn btn-outline ${action.active ? 'active' : ''}`}
+            onClick={action.onClick}
+          >
+            {action.label}
+          </button>
+        ))}
+        <button type="button" className="btn btn-outline" onClick={onToggleTheme}>
+          {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+        </button>
       </nav>
     </header>
   );
