@@ -5,6 +5,8 @@ const getConnectionState = () => {
   return states[mongoose.connection.readyState] || 'unknown';
 };
 
+const isDatabaseConnected = () => mongoose.connection.readyState === 1;
+
 const connectToDatabase = async () => {
   const mongoUri = process.env.MONGODB_URI;
 
@@ -26,4 +28,4 @@ const connectToDatabase = async () => {
   }
 };
 
-export { connectToDatabase, getConnectionState };
+export { connectToDatabase, getConnectionState, isDatabaseConnected };

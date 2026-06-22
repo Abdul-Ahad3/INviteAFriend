@@ -1,18 +1,16 @@
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import 'dotenv/config';
-import { connectToDatabase, getConnectionState } from './config/database.js';
+import {
+  connectToDatabase,
+  getConnectionState,
+  isDatabaseConnected,
+} from './config/database.js';
+import User from './models/User.js';
+import { seedDefaultUser } from './seed/defaultUser.js';
+import { verifyPassword } from './utils/password.js';
 
 const PORT = Number(process.env.PORT || 3001);
-
-const users = [
-  {
-    id: 'test-user',
-    name: 'Test User',
-    email: 'test@example.com',
-    password: 'testingtesting2',
-  },
-];
 
 const sessions = new Map();
 
@@ -51,7 +49,7 @@ const readBody = (req) =>
   });
 
 const withoutPassword = (user) => ({
-  id: user.id,
+  id: user.id || user._id?.toString(),
   name: user.name,
   email: user.email,
 });
@@ -72,22 +70,25 @@ const server = createServer(async (req, res) => {
 
   if (req.method === 'POST' && req.url === '/api/login') {
     try {
+      if (!isDatabaseConnected()) {
+        sendJson(res, 503, { message: 'Database is not connected.' });
+        return;
+      }
+
       const { email, password } = await readBody(req);
       const normalizedEmail = String(email || '').trim().toLowerCase();
 
-      const user = users.find(
-        (candidate) =>
-          candidate.email.toLowerCase() === normalizedEmail &&
-          candidate.password === password,
-      );
+      const user = await User.findOne({ email: normalizedEmail });
 
-      if (!user) {
+      if (!user || !verifyPassword(password, user.passwordHash)) {
         sendJson(res, 401, { message: 'Invalid email or password.' });
         return;
       }
 
       const token = randomUUID();
       sessions.set(token, user.id);
+      user.lastLoginAt = new Date();
+      await user.save();
 
       sendJson(res, 200, {
         message: 'Logged in successfully.',
@@ -104,7 +105,11 @@ const server = createServer(async (req, res) => {
 });
 
 const startServer = async () => {
-  await connectToDatabase();
+  const connection = await connectToDatabase();
+
+  if (connection) {
+    await seedDefaultUser();
+  }
 
   server.listen(PORT, () => {
     console.log(`Backend server listening on http://localhost:${PORT}`);
