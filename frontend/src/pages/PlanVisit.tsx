@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { apiRequest } from '../api';
 
 type VisitRequestForm = {
   visitDate: string;
@@ -12,38 +13,57 @@ type VisitRequestForm = {
 };
 
 type StoredVisitRequest = VisitRequestForm & {
-  id: number;
+  id: string;
   submittedAt?: string;
   status?: string;
-};
-
-const getStoredVisitRequests = (): StoredVisitRequest[] => {
-  try {
-    return JSON.parse(localStorage.getItem('visitRequests') || '[]');
-  } catch {
-    return [];
-  }
 };
 
 const PlanVisit: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const selectedDate = searchParams.get('date') || '';
-  const visitId = Number(searchParams.get('visitId') || '');
-  const editingVisit = getStoredVisitRequests().find(
-    (visit) => visit.id === visitId,
-  );
-  const isEditing = Boolean(editingVisit);
+  const visitId = searchParams.get('visitId') || '';
+  const isEditing = Boolean(visitId);
   const [saveMessage, setSaveMessage] = useState('');
   const [form, setForm] = useState<VisitRequestForm>({
-    visitDate: editingVisit?.visitDate || selectedDate,
-    destination: editingVisit?.destination || '',
-    lengthOfStay: editingVisit?.lengthOfStay || '',
-    purpose: editingVisit?.purpose || '',
-    guestCount: editingVisit?.guestCount || '1',
-    hostPreference: editingVisit?.hostPreference || '',
-    message: editingVisit?.message || '',
+    visitDate: selectedDate,
+    destination: '',
+    lengthOfStay: '',
+    purpose: '',
+    guestCount: '1',
+    hostPreference: '',
+    message: '',
   });
+
+  React.useEffect(() => {
+    const loadVisit = async () => {
+      if (!visitId) {
+        return;
+      }
+
+      try {
+        const data = await apiRequest<{ visitRequest: StoredVisitRequest }>(
+          `/api/visit-requests/${visitId}`,
+          { auth: true },
+        );
+        setForm({
+          visitDate: data.visitRequest.visitDate,
+          destination: data.visitRequest.destination,
+          lengthOfStay: data.visitRequest.lengthOfStay,
+          purpose: data.visitRequest.purpose,
+          guestCount: data.visitRequest.guestCount,
+          hostPreference: data.visitRequest.hostPreference,
+          message: data.visitRequest.message,
+        });
+      } catch (error) {
+        setSaveMessage(
+          error instanceof Error ? error.message : 'Unable to load visit.',
+        );
+      }
+    };
+
+    loadVisit();
+  }, [visitId]);
 
   const readableDate = useMemo(() => {
     if (!form.visitDate) {
@@ -63,32 +83,29 @@ const PlanVisit: React.FC = () => {
     setSaveMessage('');
   };
 
-  const submitRequest = (event: React.FormEvent<HTMLFormElement>) => {
+  const submitRequest = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const existingRequests = getStoredVisitRequests();
-    const nextVisit = {
-      id: editingVisit?.id || Date.now(),
-      ...form,
-      submittedAt: editingVisit?.submittedAt || new Date().toISOString(),
-      status: editingVisit?.status || 'pending',
-    };
 
-    localStorage.setItem(
-      'visitRequests',
-      JSON.stringify(
+    try {
+      await apiRequest(
+        isEditing ? `/api/visit-requests/${visitId}` : '/api/visit-requests',
+        {
+          method: isEditing ? 'PUT' : 'POST',
+          auth: true,
+          body: JSON.stringify(form),
+        },
+      );
+      setSaveMessage(
         isEditing
-          ? existingRequests.map((visit) =>
-              visit.id === nextVisit.id ? nextVisit : visit,
-            )
-          : [nextVisit, ...existingRequests],
-      ),
-    );
-    setSaveMessage(
-      isEditing
-        ? 'Visit request updated.'
-        : 'Visit request draft saved for hosts.',
-    );
-    navigate(isEditing ? '/visits' : '/dashboard');
+          ? 'Visit request updated.'
+          : 'Visit request draft saved for hosts.',
+      );
+      navigate(isEditing ? '/visits' : '/dashboard');
+    } catch (error) {
+      setSaveMessage(
+        error instanceof Error ? error.message : 'Unable to save visit.',
+      );
+    }
   };
 
   return (

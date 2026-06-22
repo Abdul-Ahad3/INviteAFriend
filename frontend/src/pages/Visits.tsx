@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { apiRequest } from '../api';
 
 type VisitRequest = {
-  id: number;
+  id: string;
   visitDate: string;
   destination: string;
   lengthOfStay: string;
@@ -11,14 +12,6 @@ type VisitRequest = {
   hostPreference: string;
   message: string;
   status?: string;
-};
-
-const getStoredVisitRequests = (): VisitRequest[] => {
-  try {
-    return JSON.parse(localStorage.getItem('visitRequests') || '[]');
-  } catch {
-    return [];
-  }
 };
 
 const getVisitDayCount = (request: VisitRequest) =>
@@ -37,12 +30,41 @@ const formatReadableDate = (dateValue: string) => {
 };
 
 const Visits: React.FC = () => {
-  const [visits, setVisits] = useState<VisitRequest[]>(getStoredVisitRequests);
+  const [visits, setVisits] = useState<VisitRequest[]>([]);
+  const [loadMessage, setLoadMessage] = useState('');
 
-  const cancelVisit = (visitId: number) => {
-    const nextVisits = visits.filter((visit) => visit.id !== visitId);
-    setVisits(nextVisits);
-    localStorage.setItem('visitRequests', JSON.stringify(nextVisits));
+  useEffect(() => {
+    const loadVisits = async () => {
+      try {
+        const data = await apiRequest<{ visitRequests: VisitRequest[] }>(
+          '/api/visit-requests',
+          { auth: true },
+        );
+        setVisits(data.visitRequests);
+      } catch (error) {
+        setLoadMessage(
+          error instanceof Error ? error.message : 'Unable to load visits.',
+        );
+      }
+    };
+
+    loadVisits();
+  }, []);
+
+  const cancelVisit = async (visitId: string) => {
+    try {
+      await apiRequest(`/api/visit-requests/${visitId}`, {
+        method: 'DELETE',
+        auth: true,
+      });
+      setVisits((currentVisits) =>
+        currentVisits.filter((visit) => visit.id !== visitId),
+      );
+    } catch (error) {
+      setLoadMessage(
+        error instanceof Error ? error.message : 'Unable to cancel visit.',
+      );
+    }
   };
 
   return (
@@ -53,6 +75,7 @@ const Visits: React.FC = () => {
       </div>
 
       <div className="visits-detail-list">
+        {loadMessage && <p className="form-error">{loadMessage}</p>}
         {visits.length > 0 ? (
           visits.map((visit) => (
             <article key={visit.id} className="dashboard-panel visit-detail-card">

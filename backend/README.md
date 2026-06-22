@@ -66,3 +66,30 @@ Example body:
   }
 }
 ```
+
+## Visit Request API
+
+All visit request endpoints require the same bearer token.
+
+```http
+GET /api/visit-requests
+POST /api/visit-requests
+GET /api/visit-requests/:id
+PUT /api/visit-requests/:id
+DELETE /api/visit-requests/:id
+Authorization: Bearer <token>
+```
+
+Example create/update body:
+
+```json
+{
+  "visitDate": "2026-06-24",
+  "destination": "Islamabad, F-7",
+  "lengthOfStay": "3",
+  "purpose": "Conference",
+  "guestCount": "1",
+  "hostPreference": "Quiet home with workspace",
+  "message": "I am visiting for meetings and need a calm place to stay."
+}
+```

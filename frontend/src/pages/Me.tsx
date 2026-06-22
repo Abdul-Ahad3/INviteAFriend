@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { apiRequest, getAuthToken } from '../api';
 
 type ProfileForm = {
   username: string;
@@ -42,6 +43,31 @@ const defaultProfile: ProfileForm = {
   visitorInfo: '',
 };
 
+type ApiProfile = {
+  username: string;
+  name: string;
+  location: string;
+  birthday: string;
+  cnic: string;
+  host: {
+    willing: boolean;
+    houseLocation: string;
+    freeRooms: string;
+    facilities: string;
+    furnished: string;
+    additionalInfo: string;
+  };
+  visitor: {
+    willing: boolean;
+    homeLocation: string;
+    profession: string;
+    languages: string;
+    interests: string;
+    travelStyle: string;
+    bio: string;
+  };
+};
+
 const calculateAge = (birthday: string) => {
   if (!birthday) {
     return '';
@@ -67,24 +93,89 @@ const calculateAge = (birthday: string) => {
   return String(age);
 };
 
-const getSavedProfile = () => {
-  const savedProfile = localStorage.getItem('profile');
-
-  if (!savedProfile) {
+const mapApiProfileToForm = (apiProfile: ApiProfile | null): ProfileForm => {
+  if (!apiProfile) {
     return defaultProfile;
   }
 
-  try {
-    return { ...defaultProfile, ...JSON.parse(savedProfile) };
-  } catch {
-    return defaultProfile;
-  }
+  return {
+    username: apiProfile.username || '',
+    name: apiProfile.name || '',
+    location: apiProfile.location || '',
+    birthday: apiProfile.birthday || '',
+    cnic: apiProfile.cnic || '',
+    willingHost: Boolean(apiProfile.host?.willing),
+    houseLocation: apiProfile.host?.houseLocation || '',
+    freeRooms: apiProfile.host?.freeRooms || '',
+    facilities: apiProfile.host?.facilities || '',
+    furnished: apiProfile.host?.furnished || 'furnished',
+    hostInfo: apiProfile.host?.additionalInfo || '',
+    willingVisitor: Boolean(apiProfile.visitor?.willing),
+    homeLocation: apiProfile.visitor?.homeLocation || '',
+    profession: apiProfile.visitor?.profession || '',
+    languages: apiProfile.visitor?.languages || '',
+    interests: apiProfile.visitor?.interests || '',
+    travelStyle: apiProfile.visitor?.travelStyle || '',
+    visitorInfo: apiProfile.visitor?.bio || '',
+  };
 };
 
+const mapFormToApiProfile = (profile: ProfileForm) => ({
+  username: profile.username,
+  name: profile.name,
+  location: profile.location,
+  birthday: profile.birthday,
+  cnic: profile.cnic,
+  host: {
+    willing: profile.willingHost,
+    houseLocation: profile.houseLocation,
+    freeRooms: profile.freeRooms,
+    facilities: profile.facilities,
+    furnished: profile.furnished,
+    additionalInfo: profile.hostInfo,
+  },
+  visitor: {
+    willing: profile.willingVisitor,
+    homeLocation: profile.homeLocation,
+    profession: profile.profession,
+    languages: profile.languages,
+    interests: profile.interests,
+    travelStyle: profile.travelStyle,
+    bio: profile.visitorInfo,
+  },
+});
+
 const Me: React.FC = () => {
-  const [profile, setProfile] = useState<ProfileForm>(getSavedProfile);
+  const [profile, setProfile] = useState<ProfileForm>(defaultProfile);
   const [saveMessage, setSaveMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const age = useMemo(() => calculateAge(profile.birthday), [profile.birthday]);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!getAuthToken()) {
+        setSaveMessage('Please sign in to load your profile.');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const data = await apiRequest<{ profile: ApiProfile | null }>(
+          '/api/profile',
+          { auth: true },
+        );
+        setProfile(mapApiProfileToForm(data.profile));
+      } catch (error) {
+        setSaveMessage(
+          error instanceof Error ? error.message : 'Unable to load profile.',
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, []);
 
   const updateField = (
     field: keyof ProfileForm,
@@ -97,10 +188,25 @@ const Me: React.FC = () => {
     setSaveMessage('');
   };
 
-  const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    localStorage.setItem('profile', JSON.stringify(profile));
-    setSaveMessage('Profile saved.');
+
+    try {
+      const data = await apiRequest<{ profile: ApiProfile }>(
+        '/api/profile',
+        {
+          method: 'PUT',
+          auth: true,
+          body: JSON.stringify(mapFormToApiProfile(profile)),
+        },
+      );
+      setProfile(mapApiProfileToForm(data.profile));
+      setSaveMessage('Profile saved.');
+    } catch (error) {
+      setSaveMessage(
+        error instanceof Error ? error.message : 'Unable to save profile.',
+      );
+    }
   };
 
   return (
@@ -112,6 +218,8 @@ const Me: React.FC = () => {
           host, or both.
         </p>
       </div>
+
+      {isLoading && <p>Loading profile...</p>}
 
       <form className="profile-form" onSubmit={handleSave}>
         <section className="profile-section">

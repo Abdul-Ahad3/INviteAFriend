@@ -8,6 +8,7 @@ import {
 } from './config/database.js';
 import User from './models/User.js';
 import Profile from './models/Profile.js';
+import VisitRequest from './models/VisitRequest.js';
 import { seedDefaultUser } from './seed/defaultUser.js';
 import { verifyPassword } from './utils/password.js';
 
@@ -19,7 +20,7 @@ const sendJson = (res, statusCode, body) => {
   res.writeHead(statusCode, {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   });
   res.end(JSON.stringify(body));
@@ -135,13 +136,43 @@ const normalizeProfileInput = (body) => ({
   },
 });
 
+const toVisitRequestResponse = (visitRequest) => ({
+  id: visitRequest.id,
+  visitorUserId: visitRequest.visitorUserId.toString(),
+  hostUserId: visitRequest.hostUserId?.toString() || null,
+  residenceId: visitRequest.residenceId?.toString() || null,
+  visitDate: visitRequest.visitDate,
+  destination: visitRequest.destination,
+  lengthOfStay: visitRequest.lengthOfStay,
+  purpose: visitRequest.purpose,
+  guestCount: visitRequest.guestCount,
+  hostPreference: visitRequest.hostPreference,
+  message: visitRequest.message,
+  status: visitRequest.status,
+  createdAt: visitRequest.createdAt,
+  updatedAt: visitRequest.updatedAt,
+});
+
+const normalizeVisitRequestInput = (body) => ({
+  visitDate: String(body.visitDate || ''),
+  destination: String(body.destination || '').trim(),
+  lengthOfStay: String(body.lengthOfStay || '').trim(),
+  purpose: String(body.purpose || '').trim(),
+  guestCount: String(body.guestCount || '1').trim(),
+  hostPreference: String(body.hostPreference || '').trim(),
+  message: String(body.message || '').trim(),
+  status: String(body.status || 'pending'),
+});
+
 const server = createServer(async (req, res) => {
+  const requestUrl = new URL(req.url || '/', `http://${req.headers.host}`);
+
   if (req.method === 'OPTIONS') {
     sendJson(res, 204, {});
     return;
   }
 
-  if (req.method === 'GET' && req.url === '/api/health') {
+  if (req.method === 'GET' && requestUrl.pathname === '/api/health') {
     sendJson(res, 200, {
       status: 'ok',
       database: getConnectionState(),
@@ -149,7 +180,7 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  if (req.method === 'POST' && req.url === '/api/login') {
+  if (req.method === 'POST' && requestUrl.pathname === '/api/login') {
     try {
       if (!requireDatabase(res)) {
         return;
@@ -181,7 +212,7 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  if (req.url === '/api/profile') {
+  if (requestUrl.pathname === '/api/profile') {
     if (!requireDatabase(res)) {
       return;
     }
@@ -223,6 +254,107 @@ const server = createServer(async (req, res) => {
       } catch (error) {
         sendJson(res, 400, { message: error.message });
       }
+      return;
+    }
+  }
+
+  if (requestUrl.pathname === '/api/visit-requests') {
+    if (!requireDatabase(res)) {
+      return;
+    }
+
+    const userId = requireAuth(req, res);
+
+    if (!userId) {
+      return;
+    }
+
+    if (req.method === 'GET') {
+      const visitRequests = await VisitRequest.find({
+        visitorUserId: userId,
+      }).sort({ visitDate: 1, createdAt: -1 });
+
+      sendJson(res, 200, {
+        visitRequests: visitRequests.map(toVisitRequestResponse),
+      });
+      return;
+    }
+
+    if (req.method === 'POST') {
+      try {
+        const body = await readBody(req);
+        const visitRequestInput = normalizeVisitRequestInput(body);
+        const visitRequest = await VisitRequest.create({
+          ...visitRequestInput,
+          visitorUserId: userId,
+        });
+
+        sendJson(res, 201, {
+          message: 'Visit request created.',
+          visitRequest: toVisitRequestResponse(visitRequest),
+        });
+      } catch (error) {
+        sendJson(res, 400, { message: error.message });
+      }
+      return;
+    }
+  }
+
+  if (requestUrl.pathname.startsWith('/api/visit-requests/')) {
+    if (!requireDatabase(res)) {
+      return;
+    }
+
+    const userId = requireAuth(req, res);
+
+    if (!userId) {
+      return;
+    }
+
+    const visitRequestId = requestUrl.pathname.split('/').at(-1);
+
+    if (!/^[a-f\d]{24}$/i.test(visitRequestId)) {
+      sendJson(res, 404, { message: 'Visit request not found.' });
+      return;
+    }
+
+    const visitRequest = await VisitRequest.findOne({
+      _id: visitRequestId,
+      visitorUserId: userId,
+    });
+
+    if (!visitRequest) {
+      sendJson(res, 404, { message: 'Visit request not found.' });
+      return;
+    }
+
+    if (req.method === 'GET') {
+      sendJson(res, 200, {
+        visitRequest: toVisitRequestResponse(visitRequest),
+      });
+      return;
+    }
+
+    if (req.method === 'PUT') {
+      try {
+        const body = await readBody(req);
+        const visitRequestInput = normalizeVisitRequestInput(body);
+        Object.assign(visitRequest, visitRequestInput);
+        await visitRequest.save();
+
+        sendJson(res, 200, {
+          message: 'Visit request updated.',
+          visitRequest: toVisitRequestResponse(visitRequest),
+        });
+      } catch (error) {
+        sendJson(res, 400, { message: error.message });
+      }
+      return;
+    }
+
+    if (req.method === 'DELETE') {
+      await visitRequest.deleteOne();
+      sendJson(res, 200, { message: 'Visit request deleted.' });
       return;
     }
   }

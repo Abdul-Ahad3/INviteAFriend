@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { apiRequest } from '../api';
 
 type DashboardMode = 'visitor' | 'host';
 
@@ -8,7 +9,7 @@ type DashboardProps = {
 };
 
 type VisitRequest = {
-  id: number;
+  id: string;
   visitDate: string;
   lengthOfStay: string;
   purpose: string;
@@ -48,14 +49,6 @@ const buildCalendarDays = (date: Date) => {
   ];
 };
 
-const getStoredVisitRequests = (): VisitRequest[] => {
-  try {
-    return JSON.parse(localStorage.getItem('visitRequests') || '[]');
-  } catch {
-    return [];
-  }
-};
-
 const formatDateValue = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
     2,
@@ -93,9 +86,10 @@ const formatReadableDate = (dateValue: string) => {
 
 const Dashboard: React.FC<DashboardProps> = ({ mode }) => {
   const navigate = useNavigate();
-  const [visitRequests] = useState<VisitRequest[]>(getStoredVisitRequests);
+  const [visitRequests, setVisitRequests] = useState<VisitRequest[]>([]);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [planMessage, setPlanMessage] = useState('');
+  const [loadMessage, setLoadMessage] = useState('');
   const [displayDate, setDisplayDate] = useState(() => new Date());
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const today = useMemo(() => new Date(), []);
@@ -141,6 +135,26 @@ const Dashboard: React.FC<DashboardProps> = ({ mode }) => {
 
     return visitsByDate;
   }, [visitRequests]);
+
+  useEffect(() => {
+    const loadVisitRequests = async () => {
+      try {
+        const data = await apiRequest<{ visitRequests: VisitRequest[] }>(
+          '/api/visit-requests',
+          { auth: true },
+        );
+        setVisitRequests(data.visitRequests);
+      } catch (error) {
+        setLoadMessage(
+          error instanceof Error
+            ? error.message
+            : 'Unable to load planned visits.',
+        );
+      }
+    };
+
+    loadVisitRequests();
+  }, []);
   const currentPlannedVisits = useMemo(
     () =>
       visitRequests.filter((request) => {
@@ -222,6 +236,7 @@ const Dashboard: React.FC<DashboardProps> = ({ mode }) => {
   return (
     <div className="page dashboard">
       <h1>{calendarTitle}</h1>
+      {loadMessage && <p className="form-error">{loadMessage}</p>}
 
       <section className="calendar dashboard-calendar" aria-label={calendarTitle}>
         <div className="calendar-header">
