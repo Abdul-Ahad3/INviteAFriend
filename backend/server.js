@@ -1,5 +1,7 @@
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
+import 'dotenv/config';
+import { connectToDatabase, getConnectionState } from './config/database.js';
 
 const PORT = Number(process.env.PORT || 3001);
 
@@ -61,7 +63,10 @@ const server = createServer(async (req, res) => {
   }
 
   if (req.method === 'GET' && req.url === '/api/health') {
-    sendJson(res, 200, { status: 'ok' });
+    sendJson(res, 200, {
+      status: 'ok',
+      database: getConnectionState(),
+    });
     return;
   }
 
@@ -98,6 +103,15 @@ const server = createServer(async (req, res) => {
   sendJson(res, 404, { message: 'Route not found.' });
 });
 
-server.listen(PORT, () => {
-  console.log(`Backend server listening on http://localhost:${PORT}`);
+const startServer = async () => {
+  await connectToDatabase();
+
+  server.listen(PORT, () => {
+    console.log(`Backend server listening on http://localhost:${PORT}`);
+  });
+};
+
+startServer().catch((error) => {
+  console.error('Backend startup failed:', error.message);
+  process.exit(1);
 });
