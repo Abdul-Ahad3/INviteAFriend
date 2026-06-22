@@ -7,6 +7,7 @@ import {
   isDatabaseConnected,
 } from './config/database.js';
 import User from './models/User.js';
+import Profile from './models/Profile.js';
 import { seedDefaultUser } from './seed/defaultUser.js';
 import { verifyPassword } from './utils/password.js';
 
@@ -54,6 +55,86 @@ const withoutPassword = (user) => ({
   email: user.email,
 });
 
+const getBearerToken = (req) => {
+  const authorization = req.headers.authorization || '';
+  const [scheme, token] = authorization.split(' ');
+
+  if (scheme !== 'Bearer' || !token) {
+    return null;
+  }
+
+  return token;
+};
+
+const getAuthenticatedUserId = (req) => {
+  const token = getBearerToken(req);
+
+  if (!token) {
+    return null;
+  }
+
+  return sessions.get(token) || null;
+};
+
+const requireDatabase = (res) => {
+  if (isDatabaseConnected()) {
+    return true;
+  }
+
+  sendJson(res, 503, { message: 'Database is not connected.' });
+  return false;
+};
+
+const requireAuth = (req, res) => {
+  const userId = getAuthenticatedUserId(req);
+
+  if (!userId) {
+    sendJson(res, 401, { message: 'Authentication required.' });
+    return null;
+  }
+
+  return userId;
+};
+
+const toProfileResponse = (profile) => ({
+  id: profile.id,
+  userId: profile.userId.toString(),
+  username: profile.username,
+  name: profile.name,
+  location: profile.location,
+  birthday: profile.birthday,
+  cnic: profile.cnic,
+  host: profile.host,
+  visitor: profile.visitor,
+  createdAt: profile.createdAt,
+  updatedAt: profile.updatedAt,
+});
+
+const normalizeProfileInput = (body) => ({
+  username: String(body.username || '').trim(),
+  name: String(body.name || '').trim(),
+  location: String(body.location || '').trim(),
+  birthday: String(body.birthday || ''),
+  cnic: String(body.cnic || '').trim(),
+  host: {
+    willing: Boolean(body.host?.willing),
+    houseLocation: String(body.host?.houseLocation || '').trim(),
+    freeRooms: String(body.host?.freeRooms || '').trim(),
+    facilities: String(body.host?.facilities || '').trim(),
+    furnished: String(body.host?.furnished || 'furnished'),
+    additionalInfo: String(body.host?.additionalInfo || '').trim(),
+  },
+  visitor: {
+    willing: Boolean(body.visitor?.willing),
+    homeLocation: String(body.visitor?.homeLocation || '').trim(),
+    profession: String(body.visitor?.profession || '').trim(),
+    languages: String(body.visitor?.languages || '').trim(),
+    interests: String(body.visitor?.interests || '').trim(),
+    travelStyle: String(body.visitor?.travelStyle || '').trim(),
+    bio: String(body.visitor?.bio || '').trim(),
+  },
+});
+
 const server = createServer(async (req, res) => {
   if (req.method === 'OPTIONS') {
     sendJson(res, 204, {});
@@ -70,8 +151,7 @@ const server = createServer(async (req, res) => {
 
   if (req.method === 'POST' && req.url === '/api/login') {
     try {
-      if (!isDatabaseConnected()) {
-        sendJson(res, 503, { message: 'Database is not connected.' });
+      if (!requireDatabase(res)) {
         return;
       }
 
@@ -99,6 +179,52 @@ const server = createServer(async (req, res) => {
       sendJson(res, 400, { message: error.message });
     }
     return;
+  }
+
+  if (req.url === '/api/profile') {
+    if (!requireDatabase(res)) {
+      return;
+    }
+
+    const userId = requireAuth(req, res);
+
+    if (!userId) {
+      return;
+    }
+
+    if (req.method === 'GET') {
+      const profile = await Profile.findOne({ userId });
+
+      sendJson(res, 200, {
+        profile: profile ? toProfileResponse(profile) : null,
+      });
+      return;
+    }
+
+    if (req.method === 'PUT') {
+      try {
+        const body = await readBody(req);
+        const profileInput = normalizeProfileInput(body);
+        const profile = await Profile.findOneAndUpdate(
+          { userId },
+          { $set: { userId, ...profileInput } },
+          {
+            new: true,
+            runValidators: true,
+            setDefaultsOnInsert: true,
+            upsert: true,
+          },
+        );
+
+        sendJson(res, 200, {
+          message: 'Profile saved.',
+          profile: toProfileResponse(profile),
+        });
+      } catch (error) {
+        sendJson(res, 400, { message: error.message });
+      }
+      return;
+    }
   }
 
   sendJson(res, 404, { message: 'Route not found.' });
